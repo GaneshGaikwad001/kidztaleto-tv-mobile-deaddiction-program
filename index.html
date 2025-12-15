@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mobile De-addiction Survey</title>
+  <style>
+    :root{
+      --accent:#3480e4;
+      --bg:#f7fbff;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial; margin:0; background:var(--bg); color:#111}
+
+    /* Title bar */
+    .title-bar{display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(90deg,var(--accent),#1e6fd8);color:#fff;position:relative}
+    .title-bar img{width:60px;height:60px;border-radius:8px;background:#fff;padding:4px}
+    .title-bar h1{font-size:18px;margin:0;flex:1;text-align:center}
+    .admin-link{position:absolute;right:16px;top:12px;background:rgba(255,255,255,0.12);color:#fff;padding:8px 10px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,0.12)}
+
+    /* Container */
+    .container{max-width:700px;margin:18px auto;padding:14px}
+    .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 6px 18px rgba(20,40,80,0.06)}
+
+    .question-number{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .main-question{font-size:18px;margin:0 0 10px}
+    .sticker{display:block;width:100%;height:250px;border-radius:12px;overflow:hidden;background:#fafafa;display:flex;align-items:center;justify-content:center;margin:8px 0}
+    .sticker img{max-width:100%;max-height:100%;object-fit:contain}
+
+    .sub-question{font-size:14px;color:var(--muted);margin-top:6px}
+
+    /* Emojis */
+    .emoji-row{display:flex;justify-content:space-between;gap:6px;margin-top:14px}
+    .emoji{flex:1;background:#f1f5f9;border-radius:12px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;cursor:pointer;user-select:none;transition:transform .18s,box-shadow .18s;border:2px solid transparent}
+    .emoji:hover{transform:translateY(-6px);box-shadow:0 8px 18px rgba(20,40,80,0.08)}
+    .emoji.selected{border-color:var(--accent);box-shadow:0 8px 22px rgba(43,138,239,0.12)}
+    .emoji .face{font-size:32px}
+    .emoji .label{font-size:12px;margin-top:8px;color:var(--muted)}
+
+    /* Controls row (Prev) */
+    .controls-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:10px}
+    .prev-btn{background:#fff;border:1px solid #e6eefc;padding:10px 14px;border-radius:12px;cursor:pointer}
+    .pager-info{font-size:13px;color:var(--muted)}
+
+    /* Small footer area inside card for submit on last page */
+    .card-bottom{display:flex;justify-content:center;margin-top:18px}
+    .submit-btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:12px;font-weight:600;cursor:pointer}
+
+    /* Progress */
+    .progress{height:6px;background:#e6eefc;border-radius:8px;margin-top:14px;overflow:hidden}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#1e6fd8);width:0%;transition:width .3s}
+
+    /* Modal (registration, admin, coming soon) */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.5);display:none;align-items:center;justify-content:center;padding:18px;z-index:40}
+    .modal{background:var(--card);border-radius:14px;padding:16px;max-width:540px;width:100%;box-shadow:0 20px 40px rgba(2,6,23,0.35)}
+    .modal h3{margin:0 0 8px}
+    .form-row{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .form-row input, .form-row select{padding:10px;border-radius:10px;border:1px solid #e6eefc}
+    .modal-actions{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
+    .btn-ghost{background:transparent;border:1px solid #dbeafe;padding:10px 12px;border-radius:10px;cursor:pointer}
+    .btn-primary{background:var(--accent);color:#fff;border:none;padding:10px 12px;border-radius:10px;cursor:pointer}
+
+    /* result */
+    .result-percent{font-size:34px;font-weight:700;margin:8px 0; text-align: center;}
+    .consultation{margin-top:10px;background:#f8fafc;padding:10px;border-radius:10px;border:1px dashed #e2e8f0}
+
+    /* Admin panel table */
+    .admin-panel{max-height:70vh;overflow:auto}
+    table{width:100%;border-collapse:collapse}
+    table thead th{position:sticky;top:0;background:#f8fafc;padding:10px;border-bottom:1px solid #eef2ff;text-align:left}
+    table td{padding:8px;border-bottom:1px solid #f1f5f9;font-size:13px}
+    .small-muted{font-size:12px;color:var(--muted)}
+
+    /* Responsive */
+    @media (max-width:420px){.container{margin:12px}.sticker{height:160px}}
+  </style>
+</head>
+<body>
+  <header class="title-bar">
+    <img src="logo.jpg" alt="Logo"  style="width: 100px; height: 100px;">
+    <h1 style="font-size: 35px; text-align: center; padding-top: 10px;">TV-Mobile De-addiction Achievement Program (Pre Assessment)</h1>
+    <div class="admin-link" id="openAdmin">Admin</div>
+  </header>
+
+  <main class="container">
+    <div class="card" id="surveyCard" aria-live="polite">
+      <div class="question-number" id="qnum" style="padding-top: 10px;">Question 1 / 5</div>
+      <h2 class="main-question" id="mainQ">Loading question...</h2>
+
+      <div class="sticker" id="sticker" style="padding: 20px"><img src="" alt="GIF"></div>
+
+      <div class="sub-question" id="subQ">Choose one</div>
+
+      <div class="emoji-row" id="emojiRow">
+        <!-- emojis injected by JS -->
+      </div>
+
+      <div class="controls-row">
+        <button class="prev-btn" id="prevQuestionBtn" type="button" aria-label="Previous question">← Previous</button>
+        <div class="pager-info" id="pagerInfo">Question 1 / 5</div>
+      </div>
+
+      <div class="progress" aria-hidden="true" style="margin-top:12px">
+        <i id="progressBar"></i>
+      </div>
+
+      <div class="card-bottom" id="cardBottom">
+        <!-- submit button for last page will appear here -->
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Registration Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div id="modalContent">
+        <!-- injected HTML -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Modal -->
+  <div class="modal-backdrop" id="adminBackdrop">
+    <div class="modal" role="dialog" aria-modal="true" style="max-width:900px;">
+      <div id="adminContent">
+        <!-- admin UI injected -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // QUESTIONS & GIFS
+    const questions = [
+      'Do you find your child spending more and more time online or on their digital devices (computer, laptop, tablet, or smartphone) than they seem to realise?',
+      'Do you find your child passing the time on a regular basis by scrolling at their Smartphone, Tablet, or Computer- even when there might be better or more productive things to do?',
+      'Does your child demand his or her own device or get excited when you tell them that you will give them a separate device?',
+      'Does your child skip or avoid playing with friends , social events , outing or extracurricular activities to use the smartphone instead ?',
+      'Does your child sleep with Smartphone ON under their pillow or next to their bed ? or does mobile use interfere with your childs normal sleep routine',
+      'Do you find your child grabbing their mobile device or tab in-between other things theyre doing, such as schoolwork, meals, sports, or other family activities?',
+      'Screen Time policy at home - Do you limit, block, or filter the Internet and digital screen-time access for your child?',
+      'Do you feel your childs use of technology actually affects their academic productivity and real-time socialisation, family participation, or physical activity ?',
+      'Do you find your child feeling somewhat uncomfortable or showing a strong emotional reaction when you take away digital device from them ?',
+      'Do you feel your child doesnt want to be without their Smartphone or other digital devices, even for a short time?',
+      'Do you notice your child eagerly awaiting or excitedly anticipating the devices release?',
+      'Do you find your child saying “just a few more minutes” when online?'
+    ];
+
+    // one GIF per question (public urls). Replace these with your preferred GIFs.
+    const questionGifs = [
+      'https://media.giphy.com/media/mcsPU3SkKrYDdW3aAU/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGpibXByd3VwNGZlNTU0MGZ4b2pzdmNnZmY3d2o2NzZrdmd3OGNzYyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/MuOGhW5GtDazUSJcL3/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNnN6bGlsNTllNTJhZjY1d3lzZ2UzY2c2MWJoMGV2ODZzajFlb2x3ZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/UYoDZ8pZhtgcg/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHRmN3F2dGY0cmk1b290ams1Z2hoa3IxZjM3dGRvMWI0cWZrc3gxbCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/vD5LvrbW1t39D3kT0n/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGpibXByd3VwNGZlNTU0MGZ4b2pzdmNnZmY3d2o2NzZrdmd3OGNzYyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BLYWYx4lrMNgI1ZDx2/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmc0cjlsemd1eHdnM3loa2thM2dnc2VmMHAxMGQ2M3pxY3JtNDYycCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/BIiPjWBfpdLbi/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ2pkM2c0ZDFvemJpOXNnYWxmNDNmZzJvZ3FvZnk5Nm10YXMxNmlxayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KGYREM3CuCkFKZrZ6g/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXJodnlwNTJiNWZnc2V2M2h4bnc1ZWp0aHc4NnU5ZW0yeWNkc2I2ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/2Y7tZMmIpwV6Lnc5QC/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXJodnlwNTJiNWZnc2V2M2h4bnc1ZWp0aHc4NnU5ZW0yeWNkc2I2ZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4V3RuU0zSq1SC8Hh4x/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGtjbGtkdjM2dzVkcmJvbGFmemNpZDFyY2IwajY2NHI2ZTk0cmI3ZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/TZBED1pP5m8N2/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXZtdzlkYTN1aTJ4ZHNlOGZub3BkM3ByY2VrZ3p0YXRxaGdoOTZqaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/v1H1ysPDt0Ho4iFtS4/giphy.gif',
+      'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGp1N3l0a2d4bm4wNzhjZzZsd2h4Y3Fob3h2a3h0dGh5aXA2NTkxZSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VG21l9ovbbqOF2YO33/giphy.gif'
+    ];
+
+    // gif for result and gif for coming soon
+    const resultGif = 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDNwbXQzbzU3MnJrand5c3N5aXkyMmx6NDVjNzN6d3g0ZTcyMWVqOCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/6bGsOMifBidtD00W4s/giphy.gif';
+    const comingSoonGif = 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOXUyZDJ1NjZkMXlhbmlvN244azZwZGh1ajdoN3ExYXI5OHkzZzByYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fUYp0iOzQfC540KCs4/giphy.gif';
+
+    // emoji options with face and points
+    const options = [
+      {key:'never', label:'Never', face:'😀', hover:'😄', points:10},
+      {key:'rarely', label:'Rarely', face:'😬', hover:'😣', points:20},
+      {key:'sometimes', label:'Sometimes', face:'😐', hover:'🙂', points:30},
+      {key:'often', label:'Often', face:'😟', hover:'😢', points:40},
+      {key:'always', label:'Always', face:'😢', hover:'😭', points:50}
+    ];
+
+    // state
+    let current = 0;
+    const answers = new Array(questions.length).fill(null);
+
+    // DOM
+    const qnumEl = document.getElementById('qnum');
+    const mainQEl = document.getElementById('mainQ');
+    const subQEl = document.getElementById('subQ');
+    const stickerEl = document.getElementById('sticker');
+    const stickerImg = stickerEl.querySelector('img');
+    const emojiRow = document.getElementById('emojiRow');
+    const progressBar = document.getElementById('progressBar');
+    const cardBottom = document.getElementById('cardBottom');
+    const prevBtn = document.getElementById('prevQuestionBtn');
+    const pagerInfo = document.getElementById('pagerInfo');
+
+    function renderPage(){
+      qnumEl.textContent = `Question ${current+1} / ${questions.length}`;
+      mainQEl.textContent = questions[current];
+      subQEl.textContent = 'Click an emoji to select your answer. Use Previous to go back and change.';
+      pagerInfo.textContent = `Question ${current+1} / ${questions.length}`;
+
+      // show GIF for this question
+      stickerImg.src = questionGifs[current] || resultGif;
+
+      // render emojis
+      emojiRow.innerHTML = '';
+      options.forEach((opt, idx)=>{
+        const div = document.createElement('div');
+        div.className = 'emoji';
+        div.setAttribute('data-idx', idx);
+        const face = document.createElement('div'); face.className='face'; face.textContent = opt.face;
+        const label = document.createElement('div'); label.className='label'; label.textContent = opt.label;
+        div.appendChild(face); div.appendChild(label);
+
+        if(answers[current] !== null && answers[current].key === opt.key){
+          div.classList.add('selected');
+          face.textContent = opt.hover;
+        }
+
+        // hover behavior
+        div.addEventListener('pointerenter', ()=>{ face.textContent = opt.hover; });
+        div.addEventListener('pointerleave', ()=>{
+          if(answers[current] !== null && answers[current].key === opt.key) face.textContent = opt.hover; else face.textContent = opt.face;
+        });
+
+        // click: save answer, mark selected, auto advance (no Next button)
+        div.addEventListener('click', ()=>{
+          answers[current] = opt;
+          // visual
+          document.querySelectorAll('.emoji').forEach(e => e.classList.remove('selected'));
+          div.classList.add('selected');
+
+          // quick animation
+          div.animate([{transform:'scale(1)'},{transform:'scale(.96)'}],{duration:120,iterations:1});
+
+          // advance (if not last), else show submit
+          setTimeout(()=>{
+            if(current < questions.length -1){
+              current++;
+              renderPage();
+            } else {
+              showSubmit();
+            }
+            updateProgress();
+          },180);
+        });
+
+        emojiRow.appendChild(div);
+      });
+
+      // adjust Prev button availability
+      prevBtn.disabled = (current === 0);
+      if(current === 0) prevBtn.style.opacity = '0.6'; else prevBtn.style.opacity = '1';
+
+      // clear bottom unless last
+      cardBottom.innerHTML = '';
+    }
+
+    prevBtn.addEventListener('click', ()=>{
+      if(current > 0){ current--; renderPage(); updateProgress(); }
+    });
+
+    function updateProgress(){
+      const answered = answers.filter(Boolean).length;
+      const percent = Math.round((answered / questions.length) * 100);
+      progressBar.style.width = percent + '%';
+    }
+
+    function showSubmit(){
+      cardBottom.innerHTML = '';
+      const btn = document.createElement('button');
+      btn.className = 'submit-btn';
+      btn.textContent = 'Submit Assessment';
+      btn.addEventListener('click', ()=> openRegistration());
+      cardBottom.appendChild(btn);
+
+      // show result GIF in sticker as preview
+     
+    }
+
+    // Modal handling (registration)
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalContent = document.getElementById('modalContent');
+
+    function openRegistration(){
+      // ensure at least one answer per question (or we allow partial?) We'll require all answered before submit.
+      const unanswered = answers.some(a => a === null);
+      if(unanswered){
+        // allow but warn user — better to require all
+        if(!confirm('Some questions are unanswered. Please Answer all the questions')) return;
+      }
+
+      modalBackdrop.style.display = 'flex';
+      modalContent.innerHTML = registrationHTML();
+      // attach events after injected
+      document.getElementById('modalPrev').addEventListener('click', ()=>{ modalBackdrop.style.display = 'none'; renderPage(); updateProgress(); });
+      document.getElementById('getResult').addEventListener('click', handleGetResult);
+    }
+
+    function closeModal(){
+      modalBackdrop.style.display = 'none';
+      renderPage();
+      updateProgress();
+    }
+
+    function registrationHTML(){
+      // required + patterns
+      return `
+        <h3>Register your child to get result</h3>
+        <div class="form-row" id="registerForm">
+          <input type="text" id="childName" placeholder="Child name" required pattern="[A-Za-z\\s]{2,}" title="Enter valid name (letters only)" />
+          <input type="email" id="childEmail" placeholder="Email" required />
+          <input type="tel" id="childPhone" placeholder="Phone number (10 digits)" required pattern="^\\d{10}$" title="Enter 10 digit phone number" />
+          <input type="text" id="schoolName" placeholder="School name" required />
+          <input type="text" id="className" placeholder="Class (e.g. 6A or 6)" required />
+        </div>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="modalPrev" type="button">← Previous</button>
+          <button class="btn-primary" id="getResult" type="button">Get result</button>
+        </div>
+      `;
+    }
+
+    function isDuplicateSubmission(email, phone) {
+  const submissions = loadSubmissions();
+  return submissions.some(s =>
+    s.registration.email === email ||
+    s.registration.phone === phone
+  );
+}
+
+
+    function handleGetResult(){
+      // validate fields
+      const nameEl = document.getElementById('childName');
+      const emailEl = document.getElementById('childEmail');
+      const phoneEl = document.getElementById('childPhone');
+      const schoolEl = document.getElementById('schoolName');
+      const classEl = document.getElementById('className');
+
+      // HTML5 validation using checkValidity
+      if(!nameEl.checkValidity()){ alert('Please enter a valid name (letters only).'); nameEl.focus(); return; }
+      if(!emailEl.checkValidity()){ alert('Please enter a valid email.'); emailEl.focus(); return; }
+      if(!phoneEl.checkValidity()){ alert('Please enter a 10-digit phone number.'); phoneEl.focus(); return; }
+      if(!schoolEl.value.trim()){ alert('Please enter school name.'); schoolEl.focus(); return; }
+      if(!classEl.value.trim()){ alert('Please enter class.'); classEl.focus(); return; }
+
+      // 🚫 Block duplicate submission
+if (isDuplicateSubmission(emailEl.value.trim(), phoneEl.value.trim())) {
+  alert("This Email or Phone number has already been used for this assessment.");
+  return;
+}
+
+
+      computeAndShowResult({
+        name: nameEl.value.trim(),
+        email: emailEl.value.trim(),
+        phone: phoneEl.value.trim(),
+        school: schoolEl.value.trim(),
+        className: classEl.value.trim()
+      });
+    }
+
+    function computeAndShowResult(registrationData){
+      // compute score
+      let total = 0; let answered=0;
+      answers.forEach(a=>{ if(a){ total += a.points; answered++; }});
+      const minTotal = questions.length * 10;
+      const maxTotal = questions.length * 50;
+      const percentile = Math.round(((total - minTotal) / (maxTotal - minTotal)) * 100);
+
+      // save submission to localStorage
+      const submission = {
+        id: 's' + Date.now(),
+        timestamp: new Date().toISOString(),
+        registration: registrationData,
+        answers: answers.map(a => a ? {key: a.key, label: a.label, points: a.points} : null),
+        total,
+        percentile
+      };
+      saveSubmission(submission);
+
+      // show result in modal (replace content)
+let score = percentile;
+let consultationText = "";
+
+if (score >= 90) {
+  consultationText = "Immediate intervention needed—strict screen rules, parental guidance, and professional counseling are recommended.";
+} else if (score >= 70) {
+  consultationText = "Reduce non-essential screen time, follow a fixed routine, and increase physical or creative activities.";
+} else if (score >= 50) {
+  consultationText = "Set daily screen limits and take regular breaks to avoid overuse.";
+} else if (score >= 20) {
+  consultationText = "Great control—maintain healthy screen habits and balance screen time with outdoor activities.";
+} else {
+  consultationText = "Well done! Your child has no screen addiction.";
+}
+
+modalContent.innerHTML = `
+  <h3>Your result for ${escapeHtml(registrationData.name)}</h3>
+
+  <div style="display:flex;gap:12px;align-items:center">
+    <div>
+      <div class="result-percent">${percentile}%</div>
+      <div>Raw score: ${total} / ${maxTotal}</div>
+
+      <div class="consultation" style="padding:20px; width:100%">
+        <strong>Consultation:</strong>
+        <p>${consultationText}</p>
+      </div>
+    </div>
+
+    <div style="width:140px;height:120px;border-radius:10px;overflow:hidden;">
+      <img src="${resultGif}" style="width:100%;height:100%;object-fit:cover;" alt="Result GIF">
+    </div>
+  </div>
+
+  <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn-ghost" id="modalBackToSurvey">← Back to Assessment</button>
+    <button class="btn-primary" id="modalCloseFinish">Finish</button>
+  </div>
+`;
+    
+   
+
+      // set handlers
+      document.getElementById('modalBackToSurvey').addEventListener('click', ()=>{ closeModal(); });
+      document.getElementById('modalCloseFinish').addEventListener('click', ()=>{ 
+        // close modal and show Coming Soon page
+        modalContent.innerHTML = comingSoonHTML();
+        // attach close of coming soon to close modal completely
+        document.getElementById('closeComing').addEventListener('click', ()=>{ modalBackdrop.style.display = 'none'; renderPage(); updateProgress(); });
+      });
+    }
+
+    function comingSoonHTML(){
+      return `
+        <h3>Thank you!</h3>
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="flex:1">
+            <p>More features (detailed dashboard, follow up resources) coming soon.</p>
+          </div>
+          <div style="width:140px;height:120px;border-radius:10px;overflow:hidden;">
+            <img src="${comingSoonGif}" style="width:100%;height:100%;object-fit:cover;" alt="Coming soon">
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn-primary" id="closeComing">Close</button>
+        </div>
+      `;
+    }
+
+    // localStorage helpers
+    const STORAGE_KEY = 'survey_submissions_v1';
+
+    function loadSubmissions(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){ return []; }
+    }
+    function saveSubmission(sub){
+      const all = loadSubmissions();
+      all.unshift(sub); // newest first
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    }
+    function clearSubmissions(){
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    // simple escape for display
+    function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // Initialization
+    renderPage();
+    updateProgress();
+
+    // close modal on backdrop click (but not when clicking inside modal)
+    modalBackdrop.addEventListener('click', (e)=>{ if(e.target === modalBackdrop) modalBackdrop.style.display = 'none'; });
+
+    // Accessibility: left/right arrows
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'ArrowRight'){
+        if(current < questions.length -1 && answers[current] !== null){ current++; renderPage(); updateProgress(); }
+      }
+      if(e.key === 'ArrowLeft'){
+        if(current > 0){ current--; renderPage(); updateProgress(); }
+      }
+    });
+
+    /* ---------------- ADMIN ---------------- */
+    const adminBtn = document.getElementById('openAdmin');
+    const adminBackdrop = document.getElementById('adminBackdrop');
+    const adminContent = document.getElementById('adminContent');
+
+    // Simple admin credentials (client-side). Replace with server auth in production.
+    const ADMIN_USER = 'Kidztalento';
+    const ADMIN_PASS = 'password@123'; // change as needed
+
+    adminBtn.addEventListener('click', ()=> openAdminLogin());
+
+    function openAdminLogin(){
+      adminBackdrop.style.display = 'flex';
+      adminContent.innerHTML = `
+        <h3>Admin Login</h3>
+        <div class="form-row">
+          <input type="text" id="adminUser" placeholder="Username" />
+          <input type="password" id="adminPass" placeholder="Password" />
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+          <button class="btn-ghost" id="adminCancel">Cancel</button>
+          <button class="btn-primary" id="adminLogin">Login</button>
+        </div>
+      `;
+      document.getElementById('adminCancel').addEventListener('click', ()=> adminBackdrop.style.display='none');
+      document.getElementById('adminLogin').addEventListener('click', handleAdminLogin);
+    }
+
+    function handleAdminLogin(){
+      const u = document.getElementById('adminUser').value.trim();
+      const p = document.getElementById('adminPass').value;
+      if(u === ADMIN_USER && p === ADMIN_PASS){
+        openAdminPanel();
+      } else {
+        alert('Invalid credentials.');
+      }
+    }
+
+    function openAdminPanel(){
+      const submissions = loadSubmissions();
+      adminContent.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3>Assessment Data — Submissions (${submissions.length})</h3>
+          <div style="display:flex;gap:8px">
+            <button class="btn-ghost" id="exportJson">Export JSON</button>
+            <button class="btn-ghost" id="clearAll">Clear All</button>
+            <button class="btn-ghost" id="adminLogout">Logout</button>
+          </div>
+        </div>
+
+        <div class="admin-panel" style="margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Sr. no</th>
+                <th>Time</th>
+                <th>Student Name</th>
+                <th>Phone & Email</th>
+                <th>School & Class</th>
+                <th>Score (%)</th>
+                <th>Raw</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody"></tbody>
+          </table>
+        </div>
+      `;
+
+      const tbody = document.getElementById('adminTableBody');
+      submissions.forEach((s, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i+1}</td>
+          <td class="small-muted">${new Date(s.timestamp).toLocaleString()}</td>
+          <td>${escapeHtml(s.registration.name)}</td>
+          <td>${escapeHtml(s.registration.phone)}<br><span class="small-muted">${escapeHtml(s.registration.email)}</span></td>
+          <td>${escapeHtml(s.registration.school)}<br><span class="small-muted">${escapeHtml(s.registration.className)}</span></td>
+          <td style="font-weight:700">${s.percentile}%</td>
+          <td>${s.total}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('adminLogout').addEventListener('click', ()=> adminBackdrop.style.display='none');
+      document.getElementById('clearAll').addEventListener('click', ()=>{
+        if(confirm('Clear all saved submissions? This cannot be undone.')){
+          clearSubmissions();
+          openAdminPanel(); // refresh
+        }
+      });
+      document.getElementById('exportJson').addEventListener('click', ()=>{
+        const data = JSON.stringify(loadSubmissions(), null, 2);
+        // create blob and download
+        const blob = new Blob([data], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'submissions.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    // click outside admin modal closes
+    adminBackdrop.addEventListener('click', (e)=>{ if(e.target === adminBackdrop) adminBackdrop.style.display = 'none'; });
+
+  </script>
+</body>
+</html>
