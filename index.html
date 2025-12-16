@@ -76,6 +76,65 @@
 
     /* Responsive */
     @media (max-width:420px){.container{margin:12px}.sticker{height:160px}}
+    /* ---------- EXTRA MOBILE FRIENDLY ---------- */
+@media (max-width: 480px) {
+
+  .title-bar {
+    flex-direction: column;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .title-bar img {
+    width: 70px !important;
+    height: 70px !important;
+  }
+
+  .title-bar h1 {
+    font-size: 22px !important;
+    padding-top: 6px;
+  }
+
+  .container {
+    padding: 10px;
+  }
+
+  .main-question {
+    font-size: 16px;
+  }
+
+  .sticker {
+    height: 160px;
+    padding: 10px;
+  }
+
+  .emoji-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .emoji {
+    flex: 1 1 45%;
+  }
+
+  .emoji .face {
+    font-size: 28px;
+  }
+
+  .result-percent {
+    font-size: 28px;
+  }
+
+  .modal {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  table td, table th {
+    font-size: 12px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -600,6 +659,7 @@ modalContent.innerHTML = `
   </script>
 </body>
 </html>
+
 
 
 
